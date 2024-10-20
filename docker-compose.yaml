@@ -1,0 +1,47 @@
+version: '3'
+name: grafana-noise-station-demo
+services:
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    user: "0:0"
+    environment:
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: datasource:5432
+      GF_DATABASE_NAME: noise_station
+      GF_DATABASE_USER: postgres
+      GF_DATABASE_PASSWORD: mysecretpassword
+      GF_DATABASE_SSL_MODE: disable
+    restart: unless-stopped
+    depends_on:
+        - datasource
+    networks:
+      - server-side
+    ports:
+      - 3111:3000
+    volumes:
+      - grafana:/var/lib/grafana
+
+
+  datasource:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_DB: noise_station
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    networks:
+      - server-side
+    ports:
+      - 5499:5432
+    volumes:
+      - datasource-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./noise_location.sql:/docker-entrypoint-initdb.d/noise_location.sql
+
+networks:
+  server-side: {}
+
+volumes:
+  grafana: {}
+  datasource-data: {}
